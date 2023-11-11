@@ -6,10 +6,14 @@ provider:
     runtime: nodejs18.x
 
 functions:
-    function1:
-        handler: index.handler
+    signup:
+        handler: functions/auth/signup.handler
         events:
-            - httpApi: "GET /"
+            - httpApi: "POST /auth/signup"
+    signin:
+        handler: functions/auth/signin.handler
+        events:
+            - httpApi: "POST /auth/signin"
 
 plugins:
     - serverless-esbuild

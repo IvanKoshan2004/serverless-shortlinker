@@ -4,6 +4,10 @@ frameworkVersion: "3"
 provider:
     name: aws
     runtime: nodejs18.x
+    environment:
+        BCRYPT_SALT_ROUNDS: 1
+        DYNAMODB_USER_TABLE: ${self:service}-userTable-${sls:stage}
+        DYNAMODB_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
 
 functions:
     signup:
@@ -14,6 +18,29 @@ functions:
         handler: functions/auth/signin.handler
         events:
             - httpApi: "POST /auth/signin"
+
+resources:
+    Resources:
+        UserTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                AttributeDefinitions:
+                    - AttributeName: userId
+                      AttributeType: S
+                    - AttributeName: email
+                      AttributeType: S
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: userId
+                      KeyType: HASH
+                TableName: ${self:service}-userTable-${sls:stage}
+                GlobalSecondaryIndexes:
+                    - IndexName: ${self:service}-emailIndex-${sls:stage}
+                      KeySchema:
+                          - AttributeName: email
+                            KeyType: HASH
+                      Projection:
+                          ProjectionType: ALL
 
 plugins:
     - serverless-esbuild

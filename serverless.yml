@@ -1,0 +1,21 @@
+service: shortlinker
+frameworkVersion: "3"
+
+provider:
+    name: aws
+    runtime: nodejs18.x
+
+functions:
+    function1:
+        handler: index.handler
+        events:
+            - httpApi: "GET /"
+
+plugins:
+    - serverless-esbuild
+    - serverless-offline
+
+custom:
+    esbuild:
+        bundle: true
+        minify: true

@@ -1,0 +1,18 @@
+{
+    "devDependencies": {
+        "esbuild": "^0.19.5",
+        "serverless-esbuild": "^1.48.5",
+        "serverless-offline": "^13.2.1"
+    },
+    "name": "shortlinker",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "deploy": "serverless deploy",
+        "offline": "serverless offline start",
+        "offline:watch": "nodemon --exec \"npm run offline\" -e ts,yml,json"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": ""
+}

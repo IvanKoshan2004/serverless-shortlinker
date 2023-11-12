@@ -9,6 +9,8 @@ provider:
         BCRYPT_SALT_ROUNDS: 1
         DYNAMODB_USER_TABLE: ${self:service}-userTable-${sls:stage}
         DYNAMODB_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
+        DYNAMODB_SHORTLINK_TABLE: ${self:service}-shortLinkTable-${sls:stage}
+        DYNAMODB_SHORTLINK_USER_INDEX: ${self:service}-shortLinkUserIndex-${sls:stage}
         JWT_SECRET: jwt_secret_goes_here
         JWT_EXPIRE_IN: 2h
     iamRoleStatements:
@@ -22,6 +24,7 @@ provider:
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}/index/${self:service}-emailIndex-${sls:stage}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}/"
         - Effect: Allow
           Action:
               - dynamodb:PutItem
@@ -66,6 +69,7 @@ functions:
         package:
             patterns:
                 - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
         events:
             - httpApi: "POST /link"
 
@@ -86,6 +90,26 @@ resources:
                 TableName: ${self:service}-userTable-${sls:stage}
                 GlobalSecondaryIndexes:
                     - IndexName: ${self:service}-emailIndex-${sls:stage}
+                      KeySchema:
+                          - AttributeName: email
+                            KeyType: HASH
+                      Projection:
+                          ProjectionType: ALL
+        ShortLinkTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                AttributeDefinitions:
+                    - AttributeName: linkId
+                      AttributeType: S
+                    - AttributeName: userId
+                      AttributeType: S
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: userId
+                      KeyType: HASH
+                TableName: ${self:service}-shortLinkTable-${sls:stage}
+                GlobalSecondaryIndexes:
+                    - IndexName: ${self:service}-shortLinkUserIndex-${sls:stage}
                       KeySchema:
                           - AttributeName: email
                             KeyType: HASH

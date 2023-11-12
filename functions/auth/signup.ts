@@ -60,20 +60,21 @@ export async function handler(event: APIGatewayEvent) {
     const userId = randomUUID();
     const salt = await genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS!));
     const generatedHash = await hash(signUpDto.password, salt);
+    const userItem: User = {
+        userId: {
+            S: userId,
+        },
+        email: {
+            S: signUpDto.email,
+        },
+        passwordHash: {
+            S: generatedHash,
+        },
+    };
     await dynamodb.send(
         new PutItemCommand({
             TableName: process.env.DYNAMODB_USER_TABLE!,
-            Item: {
-                userId: {
-                    S: userId,
-                },
-                email: {
-                    S: signUpDto.email,
-                },
-                passwordHash: {
-                    S: generatedHash,
-                },
-            },
+            Item: userItem,
         })
     );
     const retrieveUserRequest = await dynamodb.send(

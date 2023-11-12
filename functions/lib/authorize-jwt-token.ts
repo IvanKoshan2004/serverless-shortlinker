@@ -12,8 +12,5 @@ export async function authorizeJwtToken(accessToken: string): Promise<boolean> {
         })
     );
     const responseBody = JSON.parse(Buffer.from(result.Payload!).toString());
-    if (typeof responseBody.authorized !== "boolean") {
-        return false;
-    }
-    return responseBody.authorized;
+    return responseBody;
 }

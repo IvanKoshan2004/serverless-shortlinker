@@ -1,5 +1,5 @@
 import { VerifyJwtDto } from "../../types/dtos/verify-jwt.dto";
-import { verify } from "jsonwebtoken";
+import { decode, verify } from "jsonwebtoken";
 
 export async function handler(event: VerifyJwtDto) {
     if (!event.accessToken) {
@@ -9,5 +9,6 @@ export async function handler(event: VerifyJwtDto) {
     if (!isAuthenticated) {
         return { authorized: false, error: "jwt is unauthenticated" };
     }
-    return { authorized: true };
+    const payload = decode(event.accessToken, { json: true });
+    return { authorized: true, payload: payload };
 }

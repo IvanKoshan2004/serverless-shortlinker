@@ -8,6 +8,7 @@ import {
     QueryCommand,
 } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
+import { ShortLink } from "../../types/model/short-link.type";
 
 export async function handler(event: APIGatewayEvent) {
     const accessToken = extractBearerToken(
@@ -87,20 +88,21 @@ export async function handler(event: APIGatewayEvent) {
             break;
         }
     }
+    const shortLinkItem: ShortLink = {
+        linkId: {
+            S: linkId,
+        },
+        userId: {
+            S: verifyJwtRO.payload.userId,
+        },
+        link: {
+            S: createLinkDto.link,
+        },
+    };
     await dynamodb.send(
         new PutItemCommand({
             TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
-            Item: {
-                linkId: {
-                    S: linkId,
-                },
-                userId: {
-                    S: verifyJwtRO.payload.userId,
-                },
-                link: {
-                    S: createLinkDto.link,
-                },
-            },
+            Item: shortLinkItem,
         })
     );
     const host = event.headers["Host"] || event.headers["host"];

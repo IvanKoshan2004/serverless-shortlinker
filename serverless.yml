@@ -3,21 +3,45 @@ frameworkVersion: "3"
 
 provider:
     name: aws
+    region: us-east-1
     runtime: nodejs18.x
     environment:
         BCRYPT_SALT_ROUNDS: 1
         DYNAMODB_USER_TABLE: ${self:service}-userTable-${sls:stage}
         DYNAMODB_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
+        JWT_SECRET: jwt_secret_goes_here
+        JWT_EXPIRE_IN: 2h
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - lambda:InvokeFunction
+          Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:function:${self:service}-${sls:stage}-signin"
+
+# package:
+#   excludeDevDependencies: true
+#   individually: true
+#   include:
+#       - "node_modules/**"
 
 functions:
     signup:
         handler: functions/auth/signup.handler
+        name: ${self:service}-${sls:stage}-signup
         events:
             - httpApi: "POST /auth/signup"
     signin:
         handler: functions/auth/signin.handler
+        name: ${self:service}-${sls:stage}-signin
         events:
             - httpApi: "POST /auth/signin"
+    verify-jwt:
+        handler: functions/auth/verify-jwt.handler
+        name: ${self:service}-${sls:stage}-verify-jwt
+    create-link:
+        handler: functions/shortlink/create-link.handler
+        name: ${self:service}-${sls:stage}-create-link
+        events:
+            - httpApi: "POST /link"
 
 resources:
     Resources:

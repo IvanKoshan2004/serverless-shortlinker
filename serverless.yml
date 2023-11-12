@@ -35,6 +35,11 @@ provider:
               - dynamodb:GetItem
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}"
+        - Effect: Allow
+          Action:
+              - dynamodb:DeleteItem
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}"
 
 package:
     individually: true
@@ -86,6 +91,15 @@ functions:
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
             - httpApi: "ANY /{linkId}"
+    deactivate-link:
+        handler: functions/shortlink/deactivate-link.handler
+        name: ${self:service}-${sls:stage}-deactivate-link
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
+        events:
+            - httpApi: "DELETE /link/{linkId}"
 
 resources:
     Resources:

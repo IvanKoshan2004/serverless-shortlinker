@@ -12,11 +12,14 @@
     "description": "",
     "dependencies": {
         "@aws-sdk/client-dynamodb": "^3.449.0",
-        "bcryptjs": "^2.4.3"
+        "@aws-sdk/client-lambda": "^3.449.0",
+        "bcryptjs": "^2.4.3",
+        "jsonwebtoken": "^9.0.2"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.126",
         "@types/bcryptjs": "^2.4.6",
+        "@types/jsonwebtoken": "^9.0.5",
         "esbuild": "^0.19.5",
         "serverless-esbuild": "^1.48.5",
         "serverless-offline": "^13.2.1"

@@ -44,7 +44,7 @@ export async function handler(event: APIGatewayEvent) {
     const emailExistsCheck = await dynamodb.send(
         new QueryCommand({
             TableName: process.env.DYNAMODB_USER_TABLE,
-            IndexName: process.env.DYNAMODB_EMAIL_INDEX,
+            IndexName: process.env.DYNAMODB_USER_EMAIL_INDEX,
             KeyConditionExpression: "email = :email",
             ExpressionAttributeValues: {
                 ":email": { S: signUpDto.email },
@@ -79,7 +79,7 @@ export async function handler(event: APIGatewayEvent) {
     const retrieveUserRequest = await dynamodb.send(
         new QueryCommand({
             TableName: process.env.DYNAMODB_USER_TABLE,
-            IndexName: process.env.DYNAMODB_EMAIL_INDEX,
+            IndexName: process.env.DYNAMODB_USER_EMAIL_INDEX,
             KeyConditionExpression: "email = :email",
             ExpressionAttributeValues: {
                 ":email": { S: signUpDto.email },

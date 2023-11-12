@@ -133,13 +133,13 @@ resources:
                       AttributeType: S
                 BillingMode: PAY_PER_REQUEST
                 KeySchema:
-                    - AttributeName: userId
+                    - AttributeName: linkId
                       KeyType: HASH
                 TableName: ${self:service}-shortLinkTable-${sls:stage}
                 GlobalSecondaryIndexes:
                     - IndexName: ${self:service}-shortLinkUserIndex-${sls:stage}
                       KeySchema:
-                          - AttributeName: email
+                          - AttributeName: userId
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL

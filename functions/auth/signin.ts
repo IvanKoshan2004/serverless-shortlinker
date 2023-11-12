@@ -33,7 +33,9 @@ export async function handler(event: APIGatewayEvent) {
             body: "Request body should have password",
         };
     }
-    const dynamodb = new DynamoDBClient({ endpoint: "http://localhost:8000" });
+    const dynamodb = new DynamoDBClient({
+        endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
+    });
     const result = await dynamodb.send(
         new QueryCommand({
             TableName: process.env.DYNAMODB_USER_TABLE,

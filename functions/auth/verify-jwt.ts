@@ -1,5 +1,3 @@
-import { APIGatewayEvent } from "aws-lambda";
-import { Lambda } from "aws-sdk";
 import { VerifyJwtDto } from "../../types/dtos/verify-jwt.dto";
 import { verify } from "jsonwebtoken";
 

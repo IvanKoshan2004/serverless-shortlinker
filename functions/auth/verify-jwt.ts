@@ -6,10 +6,10 @@ export async function handler(event: VerifyJwtDto): Promise<VerifyJwtRO> {
     if (!event.accessToken) {
         return { authorized: false, error: "event must have accessToken" };
     }
-    const isAuthenticated = verify(event.accessToken, process.env.JWT_SECRET!);
-    if (!isAuthenticated) {
+    try {
+        const payload = verify(event.accessToken, process.env.JWT_SECRET!);
+        return { authorized: true, payload: payload };
+    } catch (e) {
         return { authorized: false, error: "jwt is unauthenticated" };
     }
-    const payload = decode(event.accessToken, { json: true });
-    return { authorized: true, payload: payload };
 }

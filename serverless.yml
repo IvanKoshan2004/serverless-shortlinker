@@ -27,6 +27,9 @@ provider:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}/index/${self:provider.environment.DYNAMODB_USER_TABLE_EMAIL_INDEX}"
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}/index/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE_USER_INDEX}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_VIEW_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_VIEW_TABLE}/index/${self:provider.environment.DYNAMODB_VIEW_TABLE_LINK_INDEX}"
         - Effect: Allow
           Action:
               - dynamodb:PutItem
@@ -104,6 +107,15 @@ functions:
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
             - httpApi: "DELETE /link/{linkId}"
+    get-links:
+        handler: functions/shortlink/get-links.handler
+        name: ${self:service}-${sls:stage}-get-links
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
+        events:
+            - httpApi: "GET /link"
 
 resources:
     Resources:

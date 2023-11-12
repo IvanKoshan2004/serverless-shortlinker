@@ -1,0 +1,19 @@
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+
+export async function authorizeJwtToken(accessToken: string): Promise<boolean> {
+    const lambda = new LambdaClient({
+        endpoint: "http://localhost:3002",
+    });
+    const result = await lambda.send(
+        new InvokeCommand({
+            FunctionName: "shortlinker-dev-verify-jwt",
+            InvocationType: "RequestResponse",
+            Payload: JSON.stringify({ accessToken: accessToken }),
+        })
+    );
+    const responseBody = JSON.parse(Buffer.from(result.Payload!).toString());
+    if (typeof responseBody.authorized !== "boolean") {
+        return false;
+    }
+    return responseBody.authorized;
+}

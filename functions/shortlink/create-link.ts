@@ -1,22 +1,11 @@
 import { APIGatewayEvent } from "aws-lambda";
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
+import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 
 export async function handler(event: APIGatewayEvent) {
-    const lambda = new LambdaClient({
-        endpoint: "http://localhost:3002",
-    });
-
     const accessToken = extractBearerToken(event.headers.authorization);
-    const result = await lambda.send(
-        new InvokeCommand({
-            FunctionName: "shortlinker-dev-verify-jwt",
-            InvocationType: "RequestResponse",
-            Payload: JSON.stringify({ accessToken: accessToken }),
-        })
-    );
-    const responseBody = JSON.parse(Buffer.from(result.Payload!).toString());
-    if (!responseBody.authorized) {
+    const isAuthorized = await authorizeJwtToken(accessToken);
+    if (!isAuthorized) {
         return {
             statusCode: 401,
             body: JSON.stringify({ error: "Unauthorized" }),

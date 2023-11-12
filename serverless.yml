@@ -17,29 +17,29 @@ provider:
         - Effect: Allow
           Action:
               - lambda:InvokeFunction
-          Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:function:${self:service}-${sls:stage}-verify-jwt"
+          Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:function:${self:functions.verify-jwt.name}"
         - Effect: Allow
           Action:
               - dynamodb:Query
           Resource:
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}/index/${self:service}-emailIndex-${sls:stage}"
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}/"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}/index/${self:provider.environment.DYNAMODB_USER_TABLE_EMAIL_INDEX}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
         - Effect: Allow
           Action:
               - dynamodb:PutItem
           Resource:
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
         - Effect: Allow
           Action:
               - dynamodb:GetItem
           Resource:
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
         - Effect: Allow
           Action:
               - dynamodb:DeleteItem
           Resource:
-              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
 
 package:
     individually: true
@@ -115,9 +115,9 @@ resources:
                 KeySchema:
                     - AttributeName: userId
                       KeyType: HASH
-                TableName: ${self:service}-userTable-${sls:stage}
+                TableName: ${self:provider.environment.DYNAMODB_USER_TABLE}
                 GlobalSecondaryIndexes:
-                    - IndexName: ${self:service}-emailIndex-${sls:stage}
+                    - IndexName: ${self:provider.environment.DYNAMODB_USER_TABLE_EMAIL_INDEX}
                       KeySchema:
                           - AttributeName: email
                             KeyType: HASH
@@ -135,9 +135,9 @@ resources:
                 KeySchema:
                     - AttributeName: linkId
                       KeyType: HASH
-                TableName: ${self:service}-shortLinkTable-${sls:stage}
+                TableName: ${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}
                 GlobalSecondaryIndexes:
-                    - IndexName: ${self:service}-shortLinkUserIndex-${sls:stage}
+                    - IndexName: ${self:provider.environment.DYNAMODB_SHORTLINK_TABLE_USER_INDEX}
                       KeySchema:
                           - AttributeName: userId
                             KeyType: HASH

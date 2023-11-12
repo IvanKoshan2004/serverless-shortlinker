@@ -15,31 +15,57 @@ provider:
         - Effect: Allow
           Action:
               - lambda:InvokeFunction
-          Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:function:${self:service}-${sls:stage}-signin"
+          Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:function:${self:service}-${sls:stage}-verify-jwt"
+        - Effect: Allow
+          Action:
+              - dynamodb:Query
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}/index/${self:service}-emailIndex-${sls:stage}"
+        - Effect: Allow
+          Action:
+              - dynamodb:PutItem
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
 
-# package:
-#   excludeDevDependencies: true
-#   individually: true
-#   include:
-#       - "node_modules/**"
+package:
+    individually: true
 
 functions:
     signup:
         handler: functions/auth/signup.handler
         name: ${self:service}-${sls:stage}-signup
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
+                - "node_modules/bcryptjs"
+                - "node_modules/jsonwebtoken"
         events:
             - httpApi: "POST /auth/signup"
     signin:
         handler: functions/auth/signin.handler
         name: ${self:service}-${sls:stage}-signin
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
+                - "node_modules/bcryptjs"
+                - "node_modules/jsonwebtoken"
         events:
             - httpApi: "POST /auth/signin"
     verify-jwt:
         handler: functions/auth/verify-jwt.handler
         name: ${self:service}-${sls:stage}-verify-jwt
+        package:
+            patterns:
+                - "node_modules/jsonwebtoken"
     create-link:
         handler: functions/shortlink/create-link.handler
         name: ${self:service}-${sls:stage}-create-link
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
         events:
             - httpApi: "POST /link"
 

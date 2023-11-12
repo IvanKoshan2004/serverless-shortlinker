@@ -17,7 +17,7 @@ export async function handler(event: APIGatewayEvent) {
     if (!verifyJwtRO.authorized) {
         return {
             statusCode: 401,
-            body: JSON.stringify({ error: verifyJwtRO.error }),
+            body: verifyJwtRO.error,
         };
     }
     if (event.body === null) {
@@ -96,6 +96,9 @@ export async function handler(event: APIGatewayEvent) {
                 },
                 userId: {
                     S: verifyJwtRO.payload.userId,
+                },
+                link: {
+                    S: createLinkDto.link,
                 },
             },
         })

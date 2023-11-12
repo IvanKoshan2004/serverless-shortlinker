@@ -39,7 +39,7 @@ export async function handler(event: APIGatewayEvent) {
     const result = await dynamodb.send(
         new QueryCommand({
             TableName: process.env.DYNAMODB_USER_TABLE,
-            IndexName: process.env.DYNAMODB_USER_EMAIL_INDEX,
+            IndexName: process.env.DYNAMODB_USER_TABLE_EMAIL_INDEX,
             KeyConditionExpression: "email = :email",
             ExpressionAttributeValues: {
                 ":email": { S: signInDto.email },

@@ -47,6 +47,11 @@ provider:
               - dynamodb:DeleteItem
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+        - Effect: Allow
+          Action:
+              - dynamodb:Scan
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
 
 package:
     individually: true
@@ -116,6 +121,14 @@ functions:
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
             - httpApi: "GET /link"
+    deactivate-links-cron:
+        handler: functions/shortlink/deactivate-links-cron.handler
+        name: ${self:service}-${sls:stage}-deactivate-links-cron
+        events:
+            - schedule: "cron(0 0 1 * ? *)"
+        package:
+            patterns:
+                - "node_modules/@aws-sdk/client-dynamodb"
 
 resources:
     Resources:

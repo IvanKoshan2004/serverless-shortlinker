@@ -1,7 +1,7 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
-import { DeleteItemCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 
 export async function handler(event: APIGatewayEvent) {
@@ -27,12 +27,16 @@ export async function handler(event: APIGatewayEvent) {
     });
 
     const result = await dynamodb.send(
-        new DeleteItemCommand({
+        new UpdateItemCommand({
             TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
             Key: {
                 linkId: {
                     S: linkId,
                 },
+            },
+            UpdateExpression: "SET active = :active",
+            ExpressionAttributeValues: {
+                ":active": { BOOL: false },
             },
         })
     );
@@ -45,7 +49,7 @@ export async function handler(event: APIGatewayEvent) {
         };
     }
     return {
-        statusCode: 204,
+        statusCode: 200,
         body: JSON.stringify({
             success: true,
         }),

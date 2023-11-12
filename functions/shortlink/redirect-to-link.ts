@@ -3,9 +3,11 @@ import {
     DynamoDBClient,
     GetItemCommand,
     PutItemCommand,
+    UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { View } from "../../types/model/view.type";
 import { randomUUID } from "crypto";
+import { ShortLink } from "../../types/model/short-link.type";
 
 export async function handler(event: APIGatewayEvent) {
     const dynamodb = new DynamoDBClient({
@@ -26,16 +28,23 @@ export async function handler(event: APIGatewayEvent) {
                     S: linkId,
                 },
             },
-            AttributesToGet: ["link", "linkId"],
+            AttributesToGet: ["link", "linkId", "active", "oneTime"],
         })
     );
-    const shortLink = result.Item;
+    const shortLink = result.Item as ShortLink;
     if (!shortLink) {
         return {
             statusCode: 404,
             body: "Short link is not found",
         };
     }
+    if (!shortLink.active.BOOL) {
+        return {
+            statusCode: 400,
+            body: "Short link is not active",
+        };
+    }
+
     const viewItem: View = {
         linkId: {
             S: linkId,
@@ -53,6 +62,22 @@ export async function handler(event: APIGatewayEvent) {
             Item: viewItem,
         })
     );
+    if (shortLink.oneTime.BOOL == true) {
+        await dynamodb.send(
+            new UpdateItemCommand({
+                TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
+                Key: {
+                    linkId: {
+                        S: linkId,
+                    },
+                },
+                UpdateExpression: "SET active = :active",
+                ExpressionAttributeValues: {
+                    ":active": { BOOL: false },
+                },
+            })
+        );
+    }
     const response = {
         statusCode: 301,
         headers: {

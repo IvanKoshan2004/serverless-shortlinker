@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { APIGatewayEvent } from "aws-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
@@ -93,17 +94,20 @@ export async function handler(event: APIGatewayEvent) {
         linkId: {
             S: linkId,
         },
-        userId: {
-            S: verifyJwtRO.payload.userId,
-        },
         link: {
             S: createLinkDto.link,
+        },
+        userId: {
+            S: verifyJwtRO.payload.userId,
         },
         oneTime: {
             BOOL: createLinkDto.expiration == "one-time",
         },
         expireAt: {
             N: getLinkExpirationTime(createLinkDto.expiration).toString(),
+        },
+        active: {
+            BOOL: true,
         },
     };
     await dynamodb.send(

@@ -14,4 +14,7 @@ export type ShortLink = {
     expireAt: {
         N: string;
     };
+    active: {
+        BOOL: boolean;
+    };
 };

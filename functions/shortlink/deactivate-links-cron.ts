@@ -1,7 +1,7 @@
 import {
     DynamoDBClient,
-    BatchWriteItemCommand,
     ScanCommand,
+    UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
 export async function handler() {
@@ -26,29 +26,24 @@ export async function handler() {
             }),
         };
     }
-    const deleteRequests = expiredLinks.Items.map((item) => ({
-        DeleteRequest: {
-            Key: {
-                linkId: { S: item.linkId.S! },
-            },
-        },
-    }));
-    const result = await dynamodb.send(
-        new BatchWriteItemCommand({
-            RequestItems: {
-                [process.env.DYNAMODB_SHORTLINK_TABLE!]: deleteRequests,
-            },
-        })
+    const shortLinksForUpdate = expiredLinks.Items.filter(
+        (item) => item.oneTime.BOOL == false
     );
-
-    if (result.$metadata.httpStatusCode !== 200) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-            }),
-        };
-    }
+    const updatePromises = shortLinksForUpdate.map((item) => {
+        dynamodb.send(
+            new UpdateItemCommand({
+                TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
+                Key: {
+                    linkId: { S: item.linkId.S! },
+                },
+                UpdateExpression: "SET active = :active",
+                ExpressionAttributeValues: {
+                    ":active": { BOOL: false },
+                },
+            })
+        );
+    });
+    await Promise.all(updatePromises);
     return {
         statusCode: 200,
         body: JSON.stringify({

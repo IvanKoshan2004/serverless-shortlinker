@@ -65,11 +65,12 @@ export async function handler(event: APIGatewayEvent) {
         return {
             linkId: linkId,
             link: shortLink?.link.S,
+            active: shortLink?.active.BOOL,
             viewCount: viewCount?.viewCount,
         };
     });
     return {
-        statusCode: 201,
+        statusCode: 200,
         body: JSON.stringify({
             success: true,
             links: linkObjects,

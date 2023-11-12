@@ -1,5 +1,11 @@
 import { APIGatewayEvent } from "aws-lambda";
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+    DynamoDBClient,
+    GetItemCommand,
+    PutItemCommand,
+} from "@aws-sdk/client-dynamodb";
+import { View } from "../../types/model/view.type";
+import { randomUUID } from "crypto";
 
 export async function handler(event: APIGatewayEvent) {
     const dynamodb = new DynamoDBClient({
@@ -30,6 +36,23 @@ export async function handler(event: APIGatewayEvent) {
             body: "Short link is not found",
         };
     }
+    const viewItem: View = {
+        linkId: {
+            S: linkId,
+        },
+        viewId: {
+            S: randomUUID(),
+        },
+        timestamp: {
+            N: Date.now().toString(),
+        },
+    };
+    await dynamodb.send(
+        new PutItemCommand({
+            TableName: process.env.DYNAMODB_VIEW_TABLE!,
+            Item: viewItem,
+        })
+    );
     const response = {
         statusCode: 301,
         headers: {

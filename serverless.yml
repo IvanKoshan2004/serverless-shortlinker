@@ -11,6 +11,8 @@ provider:
         DYNAMODB_USER_TABLE_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
         DYNAMODB_SHORTLINK_TABLE: ${self:service}-shortLinkTable-${sls:stage}
         DYNAMODB_SHORTLINK_TABLE_USER_INDEX: ${self:service}-shortLinkUserIndex-${sls:stage}
+        DYNAMODB_VIEW_TABLE: ${self:service}-viewTable-${sls:stage}
+        DYNAMODB_VIEW_TABLE_LINK_INDEX: ${self:service}-viewTableLinkIndex-${sls:stage}
         JWT_SECRET: jwt_secret_goes_here
         JWT_EXPIRE_IN: 2h
     iamRoleStatements:
@@ -31,6 +33,7 @@ provider:
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_VIEW_TABLE}"
         - Effect: Allow
           Action:
               - dynamodb:GetItem
@@ -141,6 +144,26 @@ resources:
                     - IndexName: ${self:provider.environment.DYNAMODB_SHORTLINK_TABLE_USER_INDEX}
                       KeySchema:
                           - AttributeName: userId
+                            KeyType: HASH
+                      Projection:
+                          ProjectionType: ALL
+        ViewTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                AttributeDefinitions:
+                    - AttributeName: linkId
+                      AttributeType: S
+                    - AttributeName: viewId
+                      AttributeType: S
+                BillingMode: PAY_PER_REQUEST
+                KeySchema:
+                    - AttributeName: viewId
+                      KeyType: HASH
+                TableName: ${self:provider.environment.DYNAMODB_VIEW_TABLE}
+                GlobalSecondaryIndexes:
+                    - IndexName: ${self:provider.environment.DYNAMODB_VIEW_TABLE_LINK_INDEX}
+                      KeySchema:
+                          - AttributeName: linkId
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL

@@ -9,6 +9,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
+import { getLinkExpirationTime } from "../lib/get-link-expiration-time";
 
 export async function handler(event: APIGatewayEvent) {
     const accessToken = extractBearerToken(
@@ -97,6 +98,12 @@ export async function handler(event: APIGatewayEvent) {
         },
         link: {
             S: createLinkDto.link,
+        },
+        oneTime: {
+            BOOL: createLinkDto.expiration == "one-time",
+        },
+        expireAt: {
+            N: getLinkExpirationTime(createLinkDto.expiration).toString(),
         },
     };
     await dynamodb.send(

@@ -8,4 +8,10 @@ export type ShortLink = {
     link: {
         S: string;
     };
+    oneTime: {
+        BOOL: boolean;
+    };
+    expireAt: {
+        N: string;
+    };
 };

@@ -30,6 +30,11 @@ provider:
               - dynamodb:PutItem
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-userTable-${sls:stage}"
+        - Effect: Allow
+          Action:
+              - dynamodb:GetItem
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-shortLinkTable-${sls:stage}"
 
 package:
     individually: true
@@ -72,6 +77,15 @@ functions:
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
             - httpApi: "POST /link"
+    redirect-to-link:
+        handler: functions/shortlink/redirect-to-link.handler
+        name: ${self:service}-${sls:stage}-redirect-to-link
+        package:
+            patterns:
+                - "node_modules/aws-lambda"
+                - "node_modules/@aws-sdk/client-dynamodb"
+        events:
+            - httpApi: "ANY /{linkId}"
 
 resources:
     Resources:

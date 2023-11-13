@@ -1,11 +1,13 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
 
-export async function handler(event: APIGatewayEvent) {
+export async function handler(
+    event: APIGatewayEvent
+): Promise<APIGatewayProxyResult> {
     const accessToken = extractBearerToken(
         event.headers["authorization"] || event.headers["Authorization"]
     );

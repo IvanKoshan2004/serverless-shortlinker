@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import {
     DynamoDBClient,
     PutItemCommand,
@@ -12,7 +12,9 @@ import { sign } from "jsonwebtoken";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
 
-export async function handler(event: APIGatewayEvent) {
+export async function handler(
+    event: APIGatewayEvent
+): Promise<APIGatewayProxyResult> {
     if (event.body === null) {
         return createJsonResponse(400, {
             error: "Request should contain a body",

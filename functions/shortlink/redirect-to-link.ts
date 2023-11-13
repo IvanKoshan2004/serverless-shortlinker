@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import {
     DynamoDBClient,
     GetItemCommand,
@@ -10,7 +10,9 @@ import { randomUUID } from "crypto";
 import { ShortLink } from "../../types/model/short-link.type";
 import { createJsonResponse } from "../lib/create-json-response";
 
-export async function handler(event: APIGatewayEvent) {
+export async function handler(
+    event: APIGatewayEvent
+): Promise<APIGatewayProxyResult> {
     const dynamodb = new DynamoDBClient({
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
     });
@@ -81,5 +83,6 @@ export async function handler(event: APIGatewayEvent) {
         headers: {
             Location: shortLink.link.S,
         },
+        body: "",
     };
 }

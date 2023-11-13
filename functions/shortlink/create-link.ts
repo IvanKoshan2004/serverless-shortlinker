@@ -1,5 +1,4 @@
-import { randomUUID } from "crypto";
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 import { CreateLinkDto } from "../../types/dtos/create-link.dto";
@@ -13,7 +12,9 @@ import { ShortLink } from "../../types/model/short-link.type";
 import { getLinkExpirationTime } from "../lib/get-link-expiration-time";
 import { createJsonResponse } from "../lib/create-json-response";
 
-export async function handler(event: APIGatewayEvent) {
+export async function handler(
+    event: APIGatewayEvent
+): Promise<APIGatewayProxyResult> {
     const accessToken = extractBearerToken(
         event.headers["authorization"] || event.headers["Authorization"]
     );

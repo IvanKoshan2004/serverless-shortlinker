@@ -19,7 +19,7 @@ export async function handler(
         event.headers["authorization"] || event.headers["Authorization"]
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
-    if (!verifyJwtRO.authorized) {
+    if (!verifyJwtRO.success) {
         return createJsonResponse(401, {
             success: false,
             error: verifyJwtRO.error,
@@ -103,7 +103,7 @@ export async function handler(
             S: createLinkDto.link,
         },
         userId: {
-            S: verifyJwtRO.payload.userId,
+            S: verifyJwtRO.data.payload.userId,
         },
         oneTime: {
             BOOL: createLinkDto.expiration == "one-time",

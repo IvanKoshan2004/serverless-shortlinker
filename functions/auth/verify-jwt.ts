@@ -4,12 +4,12 @@ import { VerifyJwtRO } from "../../types/ros/verify-jwt.ro";
 
 export async function handler(event: VerifyJwtDto): Promise<VerifyJwtRO> {
     if (!event.accessToken) {
-        return { authorized: false, error: "event must have accessToken" };
+        return { success: false, error: "event must have accessToken" };
     }
     try {
         const payload = verify(event.accessToken, process.env.JWT_SECRET!);
-        return { authorized: true, payload: payload };
+        return { success: true, data: { payload: payload } };
     } catch (e) {
-        return { authorized: false, error: "jwt is unauthenticated" };
+        return { success: false, error: "jwt is unauthenticated" };
     }
 }

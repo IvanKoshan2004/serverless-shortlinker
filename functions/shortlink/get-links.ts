@@ -13,7 +13,7 @@ export async function handler(
         event.headers["authorization"] || event.headers["Authorization"]
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
-    if (!verifyJwtRO.authorized) {
+    if (!verifyJwtRO.success) {
         return createJsonResponse(401, {
             success: false,
             error: verifyJwtRO.error,
@@ -30,7 +30,7 @@ export async function handler(
             IndexName: process.env.DYNAMODB_SHORTLINK_TABLE_USER_INDEX,
             KeyConditionExpression: "userId = :userId",
             ExpressionAttributeValues: {
-                ":userId": { S: verifyJwtRO.payload.userId },
+                ":userId": { S: verifyJwtRO.data.payload.userId },
             },
         })
     );

@@ -12,7 +12,7 @@ export async function handler(
         event.headers["authorization"] || event.headers["Authorization"]
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
-    if (!verifyJwtRO.authorized) {
+    if (!verifyJwtRO.success) {
         return createJsonResponse(400, {
             success: false,
             error: verifyJwtRO.error,

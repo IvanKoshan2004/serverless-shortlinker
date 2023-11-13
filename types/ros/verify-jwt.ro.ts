@@ -1,3 +1,3 @@
 export type VerifyJwtRO<T = any> =
-    | { authorized: true; payload: T }
-    | { authorized: false; error: string };
+    | { success: true; data: { payload: T } }
+    | { success: false; error: string };

@@ -31,10 +31,9 @@ export async function handler() {
             }),
         };
     }
-    const shortLinksForDeactivation = expiredLinks.Items;
-    // .filter(
-    // (item) => item.oneTime.BOOL == false
-    // );
+    const shortLinksForDeactivation = expiredLinks.Items.filter(
+        (item) => item.oneTime.BOOL == false
+    );
     const userIds = [
         ...new Set(shortLinksForDeactivation.map((el) => el.userId.S)),
     ];

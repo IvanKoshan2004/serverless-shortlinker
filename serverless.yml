@@ -7,6 +7,7 @@ provider:
     runtime: nodejs18.x
     environment:
         BCRYPT_SALT_ROUNDS: 1
+        SENDER_EMAIL_ADDRESS: ivan.koshan.m@gmail.com
         DYNAMODB_USER_TABLE: ${self:service}-userTable-${sls:stage}
         DYNAMODB_USER_TABLE_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
         DYNAMODB_SHORTLINK_TABLE: ${self:service}-shortLinkTable-${sls:stage}
@@ -52,6 +53,10 @@ provider:
               - dynamodb:Scan
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+        - Effect: Allow
+          Action:
+              - ses:SendEmail
+          Resource: "*"
 
 package:
     individually: true
@@ -129,6 +134,12 @@ functions:
         package:
             patterns:
                 - "node_modules/@aws-sdk/client-dynamodb"
+    send-link-deactivation-emails:
+        handler: functions/email/send-link-deactivation-emails.handler
+        name: ${self:service}-${sls:stage}-send-link-deactivation-emails
+        package:
+            patterns:
+                - "node_modules/@aws-sdk/client-ses"
 
 resources:
     Resources:

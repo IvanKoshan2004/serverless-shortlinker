@@ -146,7 +146,6 @@ functions:
         name: ${self:service}-${sls:stage}-deactivate-links-cron
         events:
             - schedule: "cron(0 0 1 * ? *)"
-            - httpApi: "GET /email"
         package:
             patterns:
                 - "node_modules/@aws-sdk/client-dynamodb"

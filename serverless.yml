@@ -9,9 +9,9 @@ provider:
         BCRYPT_SALT_ROUNDS: 1
         SENDER_EMAIL_ADDRESS: ivan.koshan.m@gmail.com
         DYNAMODB_USER_TABLE: ${self:service}-userTable-${sls:stage}
-        DYNAMODB_USER_TABLE_EMAIL_INDEX: ${self:service}-emailIndex-${sls:stage}
+        DYNAMODB_USER_TABLE_EMAIL_INDEX: ${self:service}-userTableEmailIndex-${sls:stage}
         DYNAMODB_SHORTLINK_TABLE: ${self:service}-shortLinkTable-${sls:stage}
-        DYNAMODB_SHORTLINK_TABLE_USER_INDEX: ${self:service}-shortLinkUserIndex-${sls:stage}
+        DYNAMODB_SHORTLINK_TABLE_USER_INDEX: ${self:service}-shortLinkTableUserIndex-${sls:stage}
         DYNAMODB_VIEW_TABLE: ${self:service}-viewTable-${sls:stage}
         DYNAMODB_VIEW_TABLE_LINK_INDEX: ${self:service}-viewTableLinkIndex-${sls:stage}
         SQS_DEACTIVATION_QUEUE: !Ref DeactivationQueue

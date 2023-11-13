@@ -3,6 +3,7 @@ import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
+import { createJsonResponse } from "../lib/create-json-response";
 
 export async function handler(event: APIGatewayEvent) {
     const accessToken = extractBearerToken(
@@ -10,17 +11,15 @@ export async function handler(event: APIGatewayEvent) {
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
-        return {
-            statusCode: 401,
-            body: verifyJwtRO.error,
-        };
+        return createJsonResponse(400, {
+            error: verifyJwtRO.error,
+        });
     }
     const linkId = event.pathParameters?.linkId;
     if (!linkId) {
-        return {
-            statusCode: 404,
-            body: "Not Found",
-        };
+        return createJsonResponse(404, {
+            error: "Link with this id not found",
+        });
     }
     const dynamodb = new DynamoDBClient({
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
@@ -41,17 +40,11 @@ export async function handler(event: APIGatewayEvent) {
         })
     );
     if (result.$metadata.httpStatusCode !== 200) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-            }),
-        };
+        return createJsonResponse(500, {
+            error: "Link can't be deactivated",
+        });
     }
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            success: true,
-        }),
-    };
+    return createJsonResponse(200, {
+        success: true,
+    });
 }

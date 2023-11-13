@@ -5,33 +5,30 @@ import { compare } from "bcryptjs";
 import { User } from "../../types/model/user.type";
 import { sign } from "jsonwebtoken";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
+import { createJsonResponse } from "../lib/create-json-response";
 
 export async function handler(event: APIGatewayEvent) {
     if (event.body === null) {
-        return {
-            statusCode: 400,
-            body: "Request should contain a body",
-        };
+        return createJsonResponse(400, {
+            error: "Request should contain a body",
+        });
     }
     let signInDto: SignInDto;
     try {
         signInDto = JSON.parse(event.body);
     } catch (e) {
-        return {
-            statusCode: 400,
-            body: "Invalid body",
-        };
+        return createJsonResponse(400, {
+            error: "Invalid body",
+        });
     }
     if (!signInDto.email) {
-        return {
-            statusCode: 400,
-            body: "Request body should have email",
-        };
+        return createJsonResponse(400, {
+            error: "Request body should have email attribute",
+        });
     } else if (!signInDto.password) {
-        return {
-            statusCode: 400,
-            body: "Request body should have password",
-        };
+        return createJsonResponse(400, {
+            error: "Request body should have password attribute",
+        });
     }
     const dynamodb = new DynamoDBClient({
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
@@ -47,10 +44,9 @@ export async function handler(event: APIGatewayEvent) {
         })
     );
     if (!result.Items || result.Items.length == 0) {
-        return {
-            statusCode: 404,
-            body: "User email or password is invalid",
-        };
+        return createJsonResponse(401, {
+            error: "User email or password is invalid",
+        });
     }
     const user = result.Items[0] as User;
     const isAuthenticated = await compare(
@@ -58,10 +54,9 @@ export async function handler(event: APIGatewayEvent) {
         user.passwordHash.S
     );
     if (!isAuthenticated) {
-        return {
-            statusCode: 404,
-            body: "User email or password is invalid",
-        };
+        return createJsonResponse(401, {
+            error: "User email or password is invalid",
+        });
     }
     const jwtPayload: UserJwtPayload = {
         email: user.email.S,
@@ -70,8 +65,5 @@ export async function handler(event: APIGatewayEvent) {
     const accessToken = sign(jwtPayload, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE_IN,
     });
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ accessToken: accessToken }),
-    };
+    return createJsonResponse(200, { accessToken: accessToken });
 }

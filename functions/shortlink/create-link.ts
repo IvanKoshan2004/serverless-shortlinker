@@ -11,6 +11,7 @@ import {
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
 import { getLinkExpirationTime } from "../lib/get-link-expiration-time";
+import { createJsonResponse } from "../lib/create-json-response";
 
 export async function handler(event: APIGatewayEvent) {
     const accessToken = extractBearerToken(
@@ -18,42 +19,39 @@ export async function handler(event: APIGatewayEvent) {
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
-        return {
-            statusCode: 401,
-            body: verifyJwtRO.error,
-        };
+        return createJsonResponse(401, {
+            error: verifyJwtRO.error,
+        });
     }
     if (event.body === null) {
-        return {
-            statusCode: 400,
-            body: "Request should contain a body",
-        };
+        return createJsonResponse(400, {
+            error: "Request should contain a body",
+        });
     }
     let createLinkDto: CreateLinkDto;
     try {
         createLinkDto = JSON.parse(event.body);
     } catch (e) {
-        return {
-            statusCode: 400,
-            body: "Can't parse json from body",
-        };
+        return createJsonResponse(400, {
+            error: "Invalid body",
+        });
     }
     if (!createLinkDto.expiration) {
-        createLinkDto.expiration = "1d";
+        return createJsonResponse(400, {
+            error: "Request body should have expiration attribute",
+        });
     } else if (!createLinkDto.link) {
-        return {
-            statusCode: 400,
-            body: "Request body should have link",
-        };
+        return createJsonResponse(400, {
+            error: "Request body should have link attribute",
+        });
     }
     try {
         const fixedLink = new URL(createLinkDto.link).href;
         createLinkDto.link = fixedLink;
     } catch (e) {
-        return {
-            statusCode: 400,
-            body: "The link should have a valid format",
-        };
+        return createJsonResponse(400, {
+            error: "The link should have a valid format",
+        });
     }
 
     const dynamodb = new DynamoDBClient({
@@ -122,12 +120,9 @@ export async function handler(event: APIGatewayEvent) {
         event.headers["x-forwarded-proto"] ||
         "http";
     const link = `${proto}://${host}/${linkId}`;
-    return {
-        statusCode: 201,
-        body: JSON.stringify({
-            success: true,
-            linkId: linkId,
-            link: link,
-        }),
-    };
+    return createJsonResponse(201, {
+        success: true,
+        linkId: linkId,
+        link: link,
+    });
 }

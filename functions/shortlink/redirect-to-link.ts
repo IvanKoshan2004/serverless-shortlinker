@@ -8,6 +8,7 @@ import {
 import { View } from "../../types/model/view.type";
 import { randomUUID } from "crypto";
 import { ShortLink } from "../../types/model/short-link.type";
+import { createJsonResponse } from "../lib/create-json-response";
 
 export async function handler(event: APIGatewayEvent) {
     const dynamodb = new DynamoDBClient({
@@ -15,10 +16,9 @@ export async function handler(event: APIGatewayEvent) {
     });
     const linkId = event.pathParameters?.linkId;
     if (!linkId) {
-        return {
-            statusCode: 404,
-            body: "Not Found",
-        };
+        return createJsonResponse(404, {
+            error: "Link with this id not found",
+        });
     }
     const result = await dynamodb.send(
         new GetItemCommand({
@@ -33,16 +33,14 @@ export async function handler(event: APIGatewayEvent) {
     );
     const shortLink = result.Item as ShortLink;
     if (!shortLink) {
-        return {
-            statusCode: 404,
-            body: "Short link is not found",
-        };
+        return createJsonResponse(404, {
+            error: "Short link is not found",
+        });
     }
     if (!shortLink.active.BOOL) {
-        return {
-            statusCode: 400,
-            body: "Short link is not active",
-        };
+        return createJsonResponse(400, {
+            error: "Short link is not active",
+        });
     }
 
     const viewItem: View = {
@@ -78,11 +76,10 @@ export async function handler(event: APIGatewayEvent) {
             })
         );
     }
-    const response = {
+    return {
         statusCode: 301,
         headers: {
             Location: shortLink.link.S,
         },
     };
-    return response;
 }

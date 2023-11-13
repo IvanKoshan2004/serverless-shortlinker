@@ -4,6 +4,7 @@ import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
+import { createJsonResponse } from "../lib/create-json-response";
 
 export async function handler(event: APIGatewayEvent) {
     const accessToken = extractBearerToken(
@@ -11,10 +12,9 @@ export async function handler(event: APIGatewayEvent) {
     );
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
-        return {
-            statusCode: 401,
-            body: verifyJwtRO.error,
-        };
+        return createJsonResponse(401, {
+            error: verifyJwtRO.error,
+        });
     }
 
     const dynamodb = new DynamoDBClient({
@@ -32,12 +32,9 @@ export async function handler(event: APIGatewayEvent) {
         })
     );
     if (!result.Items) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-            }),
-        };
+        return createJsonResponse(500, {
+            success: false,
+        });
     }
     const shortLinks = result.Items as ShortLink[];
     const linkIds = shortLinks.map((el) => el.linkId.S);
@@ -69,11 +66,8 @@ export async function handler(event: APIGatewayEvent) {
             viewCount: viewCount?.viewCount,
         };
     });
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            success: true,
-            links: linkObjects,
-        }),
-    };
+    return createJsonResponse(200, {
+        success: true,
+        links: linkObjects,
+    });
 }

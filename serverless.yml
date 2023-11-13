@@ -14,6 +14,7 @@ provider:
         DYNAMODB_SHORTLINK_TABLE_USER_INDEX: ${self:service}-shortLinkUserIndex-${sls:stage}
         DYNAMODB_VIEW_TABLE: ${self:service}-viewTable-${sls:stage}
         DYNAMODB_VIEW_TABLE_LINK_INDEX: ${self:service}-viewTableLinkIndex-${sls:stage}
+        SQS_DEACTIVATION_QUEUE: !Ref DeactivationQueue
         JWT_SECRET: jwt_secret_goes_here
         JWT_EXPIRE_IN: 2h
     iamRoleStatements:
@@ -45,6 +46,16 @@ provider:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
         - Effect: Allow
           Action:
+              - dynamodb:BatchGetItem
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
+        - Effect: Allow
+          Action:
+              - dynamodb:UpdateItem
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+        - Effect: Allow
+          Action:
               - dynamodb:DeleteItem
           Resource:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
@@ -56,6 +67,10 @@ provider:
         - Effect: Allow
           Action:
               - ses:SendEmail
+          Resource: "*"
+        - Effect: Allow
+          Action:
+              - sqs:SendMessage
           Resource: "*"
 
 package:
@@ -131,12 +146,17 @@ functions:
         name: ${self:service}-${sls:stage}-deactivate-links-cron
         events:
             - schedule: "cron(0 0 1 * ? *)"
+            - httpApi: "GET /email"
         package:
             patterns:
                 - "node_modules/@aws-sdk/client-dynamodb"
     send-link-deactivation-emails:
         handler: functions/email/send-link-deactivation-emails.handler
         name: ${self:service}-${sls:stage}-send-link-deactivation-emails
+        events:
+            - sqs:
+                  arn: !GetAtt DeactivationQueue.Arn
+                  batchSize: 10
         package:
             patterns:
                 - "node_modules/@aws-sdk/client-ses"
@@ -203,8 +223,14 @@ resources:
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL
-
+        DeactivationQueue:
+            Type: AWS::SQS::Queue
+            Properties:
+                QueueName: deactivation-queue
+                VisibilityTimeout: 900
+                MessageRetentionPeriod: 172800
 plugins:
+    - serverless-export-env
     - serverless-esbuild
     - serverless-offline
 

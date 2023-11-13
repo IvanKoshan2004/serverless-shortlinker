@@ -1,7 +1,7 @@
 import { APIGatewayProxyResult } from "aws-lambda";
-export function createJsonResponse(
+export function createJsonResponse<T = any>(
     statusCode: number,
-    json: Record<any, any>
+    json: T
 ): APIGatewayProxyResult {
     return {
         statusCode: statusCode,

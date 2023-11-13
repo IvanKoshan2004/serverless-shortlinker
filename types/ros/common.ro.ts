@@ -1,3 +1,3 @@
-export type CommonRO<TData = any> =
+export type CommonRO<TData = {}> =
     | { success: true; data: TData }
     | { success: false; error: string };

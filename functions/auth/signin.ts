@@ -6,12 +6,13 @@ import { User } from "../../types/model/user.type";
 import { sign } from "jsonwebtoken";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
+import { SignInRO } from "../../types/ros/signin.ro";
 
 export async function handler(
     event: APIGatewayEvent
 ): Promise<APIGatewayProxyResult> {
     if (event.body === null) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignInRO>(400, {
             success: false,
             error: "Request should contain a body",
         });
@@ -20,18 +21,18 @@ export async function handler(
     try {
         signInDto = JSON.parse(event.body);
     } catch (e) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignInRO>(400, {
             success: false,
             error: "Invalid body",
         });
     }
     if (!signInDto.email) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignInRO>(400, {
             success: false,
             error: "Request body should have email attribute",
         });
     } else if (!signInDto.password) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignInRO>(400, {
             success: false,
             error: "Request body should have password attribute",
         });
@@ -50,7 +51,7 @@ export async function handler(
         })
     );
     if (!result.Items || result.Items.length == 0) {
-        return createJsonResponse(401, {
+        return createJsonResponse<SignInRO>(401, {
             success: false,
             error: "User email or password is invalid",
         });
@@ -61,7 +62,7 @@ export async function handler(
         user.passwordHash.S
     );
     if (!isAuthenticated) {
-        return createJsonResponse(401, {
+        return createJsonResponse<SignInRO>(401, {
             success: false,
             error: "User email or password is invalid",
         });
@@ -73,7 +74,7 @@ export async function handler(
     const accessToken = sign(jwtPayload, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE_IN,
     });
-    return createJsonResponse(200, {
+    return createJsonResponse<SignInRO>(200, {
         success: true,
         data: { accessToken: accessToken },
     });

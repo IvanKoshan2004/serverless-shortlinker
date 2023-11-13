@@ -11,6 +11,7 @@ import { User } from "../../types/model/user.type";
 import { sign } from "jsonwebtoken";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
+import { SignUpRO } from "../../types/ros/signup.ro";
 
 export async function handler(
     event: APIGatewayEvent
@@ -25,18 +26,18 @@ export async function handler(
     try {
         signUpDto = JSON.parse(event.body);
     } catch (e) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignUpRO>(400, {
             success: false,
             error: "Invalid body",
         });
     }
     if (!signUpDto.email) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignUpRO>(400, {
             success: false,
             error: "Request body should have email attribute",
         });
     } else if (!signUpDto.password) {
-        return createJsonResponse(400, {
+        return createJsonResponse<SignUpRO>(400, {
             success: false,
             error: "Request body should have password attribute",
         });
@@ -55,7 +56,7 @@ export async function handler(
         })
     );
     if (emailExistsCheck.Items && emailExistsCheck.Items.length != 0) {
-        return createJsonResponse(409, {
+        return createJsonResponse<SignUpRO>(409, {
             success: false,
             error: "User with this email already exists",
         });
@@ -91,7 +92,7 @@ export async function handler(
         })
     );
     if (!retrieveUserRequest.Items || retrieveUserRequest.Items.length == 0) {
-        return createJsonResponse(404, {
+        return createJsonResponse<SignUpRO>(404, {
             success: false,
             error: "Can't find created user",
         });
@@ -104,7 +105,7 @@ export async function handler(
     const accessToken = sign(jwtPayload, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE_IN,
     });
-    return createJsonResponse(201, {
+    return createJsonResponse<SignUpRO>(201, {
         success: true,
         data: { accessToken: accessToken },
     });

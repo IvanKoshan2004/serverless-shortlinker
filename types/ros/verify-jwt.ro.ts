@@ -1,3 +1,3 @@
-export type VerifyJwtRO<T = any> =
-    | { success: true; data: { payload: T } }
-    | { success: false; error: string };
+import { CommonRO } from "./common.ro";
+
+export type VerifyJwtRO<T = any> = CommonRO<{ payload: T }>;

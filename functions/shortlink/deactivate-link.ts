@@ -14,12 +14,14 @@ export async function handler(
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
         return createJsonResponse(400, {
+            success: false,
             error: verifyJwtRO.error,
         });
     }
     const linkId = event.pathParameters?.linkId;
     if (!linkId) {
         return createJsonResponse(404, {
+            success: false,
             error: "Link with this id not found",
         });
     }
@@ -43,10 +45,12 @@ export async function handler(
     );
     if (result.$metadata.httpStatusCode !== 200) {
         return createJsonResponse(500, {
+            success: false,
             error: "Link can't be deactivated",
         });
     }
     return createJsonResponse(200, {
         success: true,
+        data: {},
     });
 }

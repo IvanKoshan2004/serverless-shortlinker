@@ -21,11 +21,13 @@ export async function handler(
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
         return createJsonResponse(401, {
+            success: false,
             error: verifyJwtRO.error,
         });
     }
     if (event.body === null) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request should contain a body",
         });
     }
@@ -34,15 +36,18 @@ export async function handler(
         createLinkDto = JSON.parse(event.body);
     } catch (e) {
         return createJsonResponse(400, {
+            success: false,
             error: "Invalid body",
         });
     }
     if (!createLinkDto.expiration) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have expiration attribute",
         });
     } else if (!createLinkDto.link) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have link attribute",
         });
     }
@@ -51,6 +56,7 @@ export async function handler(
         createLinkDto.link = fixedLink;
     } catch (e) {
         return createJsonResponse(400, {
+            success: false,
             error: "The link should have a valid format",
         });
     }
@@ -123,7 +129,9 @@ export async function handler(
     const link = `${proto}://${host}/${linkId}`;
     return createJsonResponse(201, {
         success: true,
-        linkId: linkId,
-        link: link,
+        data: {
+            linkId: linkId,
+            link: link,
+        },
     });
 }

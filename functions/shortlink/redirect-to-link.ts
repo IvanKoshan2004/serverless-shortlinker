@@ -19,6 +19,7 @@ export async function handler(
     const linkId = event.pathParameters?.linkId;
     if (!linkId) {
         return createJsonResponse(404, {
+            success: false,
             error: "Link with this id not found",
         });
     }
@@ -36,11 +37,13 @@ export async function handler(
     const shortLink = result.Item as ShortLink;
     if (!shortLink) {
         return createJsonResponse(404, {
+            success: false,
             error: "Short link is not found",
         });
     }
     if (!shortLink.active.BOOL) {
         return createJsonResponse(400, {
+            success: false,
             error: "Short link is not active",
         });
     }

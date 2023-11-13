@@ -12,6 +12,7 @@ export async function handler(
 ): Promise<APIGatewayProxyResult> {
     if (event.body === null) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request should contain a body",
         });
     }
@@ -20,15 +21,18 @@ export async function handler(
         signInDto = JSON.parse(event.body);
     } catch (e) {
         return createJsonResponse(400, {
+            success: false,
             error: "Invalid body",
         });
     }
     if (!signInDto.email) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have email attribute",
         });
     } else if (!signInDto.password) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have password attribute",
         });
     }
@@ -47,6 +51,7 @@ export async function handler(
     );
     if (!result.Items || result.Items.length == 0) {
         return createJsonResponse(401, {
+            success: false,
             error: "User email or password is invalid",
         });
     }
@@ -57,6 +62,7 @@ export async function handler(
     );
     if (!isAuthenticated) {
         return createJsonResponse(401, {
+            success: false,
             error: "User email or password is invalid",
         });
     }
@@ -67,5 +73,8 @@ export async function handler(
     const accessToken = sign(jwtPayload, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE_IN,
     });
-    return createJsonResponse(200, { accessToken: accessToken });
+    return createJsonResponse(200, {
+        success: true,
+        data: { accessToken: accessToken },
+    });
 }

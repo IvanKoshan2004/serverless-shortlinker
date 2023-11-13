@@ -15,6 +15,7 @@ export async function handler(
     const verifyJwtRO = await authorizeJwtToken<UserJwtPayload>(accessToken);
     if (!verifyJwtRO.authorized) {
         return createJsonResponse(401, {
+            success: false,
             error: verifyJwtRO.error,
         });
     }
@@ -36,6 +37,7 @@ export async function handler(
     if (!result.Items) {
         return createJsonResponse(500, {
             success: false,
+            error: "Couldn't get user links",
         });
     }
     const shortLinks = result.Items as ShortLink[];
@@ -70,6 +72,8 @@ export async function handler(
     });
     return createJsonResponse(200, {
         success: true,
-        links: linkObjects,
+        data: {
+            links: linkObjects,
+        },
     });
 }

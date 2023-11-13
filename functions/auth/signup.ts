@@ -17,6 +17,7 @@ export async function handler(
 ): Promise<APIGatewayProxyResult> {
     if (event.body === null) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request should contain a body",
         });
     }
@@ -25,15 +26,18 @@ export async function handler(
         signUpDto = JSON.parse(event.body);
     } catch (e) {
         return createJsonResponse(400, {
+            success: false,
             error: "Invalid body",
         });
     }
     if (!signUpDto.email) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have email attribute",
         });
     } else if (!signUpDto.password) {
         return createJsonResponse(400, {
+            success: false,
             error: "Request body should have password attribute",
         });
     }
@@ -52,6 +56,7 @@ export async function handler(
     );
     if (emailExistsCheck.Items && emailExistsCheck.Items.length != 0) {
         return createJsonResponse(409, {
+            success: false,
             error: "User with this email already exists",
         });
     }
@@ -87,6 +92,7 @@ export async function handler(
     );
     if (!retrieveUserRequest.Items || retrieveUserRequest.Items.length == 0) {
         return createJsonResponse(404, {
+            success: false,
             error: "Can't find created user",
         });
     }
@@ -98,5 +104,8 @@ export async function handler(
     const accessToken = sign(jwtPayload, process.env.JWT_SECRET!, {
         expiresIn: process.env.JWT_EXPIRE_IN,
     });
-    return createJsonResponse(201, { accessToken: accessToken });
+    return createJsonResponse(201, {
+        success: true,
+        data: { accessToken: accessToken },
+    });
 }

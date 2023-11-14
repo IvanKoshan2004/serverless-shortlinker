@@ -11,6 +11,7 @@ import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
 import { getLinkExpirationTime } from "../lib/get-link-expiration-time";
 import { createJsonResponse } from "../lib/create-json-response";
+import { CreateLinkRO } from "../../types/ros/create-link.ro";
 
 export async function handler(
     event: APIGatewayEvent
@@ -127,7 +128,7 @@ export async function handler(
         event.headers["x-forwarded-proto"] ||
         "http";
     const link = `${proto}://${host}/${linkId}`;
-    return createJsonResponse(201, {
+    return createJsonResponse<CreateLinkRO>(201, {
         success: true,
         data: {
             linkId: linkId,

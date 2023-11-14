@@ -5,6 +5,7 @@ import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
 import { createJsonResponse } from "../lib/create-json-response";
+import { GetLinksRO } from "../../types/ros/get-links.ro";
 
 export async function handler(
     event: APIGatewayEvent
@@ -70,7 +71,7 @@ export async function handler(
             viewCount: viewCount?.viewCount,
         };
     });
-    return createJsonResponse(200, {
+    return createJsonResponse<GetLinksRO>(200, {
         success: true,
         data: {
             links: linkObjects,

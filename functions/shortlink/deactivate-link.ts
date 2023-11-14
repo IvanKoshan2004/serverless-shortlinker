@@ -4,6 +4,7 @@ import { authorizeJwtToken } from "../lib/authorize-jwt-token";
 import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
+import { DeactivateLinkRO } from "../../types/ros/deactivate-link.ro";
 
 export async function handler(
     event: APIGatewayEvent
@@ -49,7 +50,7 @@ export async function handler(
             error: "Link can't be deactivated",
         });
     }
-    return createJsonResponse(200, {
+    return createJsonResponse<DeactivateLinkRO>(200, {
         success: true,
         data: {},
     });

@@ -5,7 +5,9 @@ export async function authorizeJwtToken<T>(
     accessToken: string
 ): Promise<VerifyJwtRO<T>> {
     const lambda = new LambdaClient({
-        endpoint: process.env.IS_OFFLINE ? "http://localhost:3002" : undefined,
+        endpoint: process.env.IS_OFFLINE
+            ? process.env.OFFLINE_LAMBDA_ENDPOINT
+            : undefined,
     });
     const result = await lambda.send(
         new InvokeCommand({

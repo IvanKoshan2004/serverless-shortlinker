@@ -18,6 +18,7 @@ provider:
         JWT_SECRET: jwt_secret_goes_here
         JWT_EXPIRE_IN: 2h
         VERIFY_JWT_FUNCTION: ${self:functions.verify-jwt.name}
+        OFFLINE_LAMBDA_PORT: "http://localhost:${self:custom.serverless-offline.lambdaPort}"
 
     iamRoleStatements:
         - Effect: Allow
@@ -236,6 +237,8 @@ plugins:
     - serverless-offline
 
 custom:
+    serverless-offline:
+        lambdaPort: 3002
     esbuild:
         bundle: true
         minify: true

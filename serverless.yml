@@ -69,6 +69,14 @@ provider:
               - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
         - Effect: Allow
           Action:
+              - dynamodb:DescribeLimits
+          Resource:
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}"
+              - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_VIEW_TABLE}"
+
+        - Effect: Allow
+          Action:
               - ses:SendEmail
           Resource: "*"
         - Effect: Allow
@@ -166,7 +174,7 @@ functions:
 resources:
     Resources:
         UserTable:
-            Type: AWS::DynamoDB::Table
+            Type: AWS::DynamoDB::GlobalTable
             Properties:
                 AttributeDefinitions:
                     - AttributeName: userId
@@ -178,6 +186,8 @@ resources:
                     - AttributeName: userId
                       KeyType: HASH
                 TableName: ${self:provider.environment.DYNAMODB_USER_TABLE}
+                StreamSpecification:
+                    StreamViewType: NEW_AND_OLD_IMAGES
                 GlobalSecondaryIndexes:
                     - IndexName: ${self:provider.environment.DYNAMODB_USER_TABLE_EMAIL_INDEX}
                       KeySchema:
@@ -185,8 +195,11 @@ resources:
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL
+                Replicas:
+                    - Region: us-east-1
+                    - Region: us-east-2
         ShortLinkTable:
-            Type: AWS::DynamoDB::Table
+            Type: AWS::DynamoDB::GlobalTable
             Properties:
                 AttributeDefinitions:
                     - AttributeName: linkId
@@ -198,6 +211,8 @@ resources:
                     - AttributeName: linkId
                       KeyType: HASH
                 TableName: ${self:provider.environment.DYNAMODB_SHORTLINK_TABLE}
+                StreamSpecification:
+                    StreamViewType: NEW_AND_OLD_IMAGES
                 GlobalSecondaryIndexes:
                     - IndexName: ${self:provider.environment.DYNAMODB_SHORTLINK_TABLE_USER_INDEX}
                       KeySchema:
@@ -205,8 +220,11 @@ resources:
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL
+                Replicas:
+                    - Region: us-east-1
+                    - Region: us-east-2
         ViewTable:
-            Type: AWS::DynamoDB::Table
+            Type: AWS::DynamoDB::GlobalTable
             Properties:
                 AttributeDefinitions:
                     - AttributeName: linkId
@@ -218,6 +236,8 @@ resources:
                     - AttributeName: viewId
                       KeyType: HASH
                 TableName: ${self:provider.environment.DYNAMODB_VIEW_TABLE}
+                StreamSpecification:
+                    StreamViewType: NEW_AND_OLD_IMAGES
                 GlobalSecondaryIndexes:
                     - IndexName: ${self:provider.environment.DYNAMODB_VIEW_TABLE_LINK_INDEX}
                       KeySchema:
@@ -225,6 +245,10 @@ resources:
                             KeyType: HASH
                       Projection:
                           ProjectionType: ALL
+                Replicas:
+                    - Region: us-east-1
+                    - Region: us-east-2
+
         DeactivationQueue:
             Type: AWS::SQS::Queue
             Properties:

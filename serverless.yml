@@ -17,6 +17,8 @@ provider:
         SQS_DEACTIVATION_QUEUE: !Ref DeactivationQueue
         JWT_SECRET: jwt_secret_goes_here
         JWT_EXPIRE_IN: 2h
+        VERIFY_JWT_FUNCTION: ${self:functions.verify-jwt.name}
+
     iamRoleStatements:
         - Effect: Allow
           Action:

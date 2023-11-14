@@ -9,7 +9,7 @@ export async function authorizeJwtToken<T>(
     });
     const result = await lambda.send(
         new InvokeCommand({
-            FunctionName: "shortlinker-dev-verify-jwt",
+            FunctionName: process.env.VERIFY_JWT_FUNCTION,
             InvocationType: "RequestResponse",
             Payload: JSON.stringify({ accessToken: accessToken }),
         })

@@ -3,6 +3,7 @@ import {
     DynamoDBClient,
     PutItemCommand,
     QueryCommand,
+    QueryCommandOutput,
 } from "@aws-sdk/client-dynamodb";
 import { SignUpDto } from "../../types/dtos/signup.dto";
 import { genSalt, hash } from "bcryptjs";
@@ -45,18 +46,27 @@ export async function handler(
     const dynamodb = new DynamoDBClient({
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
     });
-    const emailExistsCheck = await dynamodb.send(
-        new QueryCommand({
-            TableName: process.env.DYNAMODB_USER_TABLE,
-            IndexName: process.env.DYNAMODB_USER_TABLE_EMAIL_INDEX,
-            KeyConditionExpression: "email = :email",
-            ExpressionAttributeValues: {
-                ":email": { S: signUpDto.email },
-            },
-        })
-    );
-    if (emailExistsCheck.Items && emailExistsCheck.Items.length != 0) {
-        return createJsonResponse<SignUpRO>(409, {
+    let emailExistsQuery: QueryCommandOutput;
+    try {
+        emailExistsQuery = await dynamodb.send(
+            new QueryCommand({
+                TableName: process.env.DYNAMODB_USER_TABLE,
+                IndexName: process.env.DYNAMODB_USER_TABLE_EMAIL_INDEX,
+                KeyConditionExpression: "email = :email",
+                ExpressionAttributeValues: {
+                    ":email": { S: signUpDto.email },
+                },
+            })
+        );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Error happened while querying the database",
+        });
+    }
+    if (emailExistsQuery.Items && emailExistsQuery.Items.length != 0) {
+        return createJsonResponse(409, {
             success: false,
             error: "User with this email already exists",
         });
@@ -75,29 +85,46 @@ export async function handler(
             S: generatedHash,
         },
     };
-    await dynamodb.send(
-        new PutItemCommand({
-            TableName: process.env.DYNAMODB_USER_TABLE!,
-            Item: userItem,
-        })
-    );
-    const retrieveUserRequest = await dynamodb.send(
-        new QueryCommand({
-            TableName: process.env.DYNAMODB_USER_TABLE,
-            IndexName: process.env.DYNAMODB_USER_TABLE_EMAIL_INDEX,
-            KeyConditionExpression: "email = :email",
-            ExpressionAttributeValues: {
-                ":email": { S: signUpDto.email },
-            },
-        })
-    );
-    if (!retrieveUserRequest.Items || retrieveUserRequest.Items.length == 0) {
+    try {
+        await dynamodb.send(
+            new PutItemCommand({
+                TableName: process.env.DYNAMODB_USER_TABLE!,
+                Item: userItem,
+            })
+        );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Error happened while saving user to the database",
+        });
+    }
+    let getUserByEmailQuery: QueryCommandOutput;
+    try {
+        getUserByEmailQuery = await dynamodb.send(
+            new QueryCommand({
+                TableName: process.env.DYNAMODB_USER_TABLE,
+                IndexName: process.env.DYNAMODB_USER_TABLE_EMAIL_INDEX,
+                KeyConditionExpression: "email = :email",
+                ExpressionAttributeValues: {
+                    ":email": { S: signUpDto.email },
+                },
+            })
+        );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Error happened while saving user to the database",
+        });
+    }
+    if (!getUserByEmailQuery.Items || getUserByEmailQuery.Items.length == 0) {
         return createJsonResponse<SignUpRO>(404, {
             success: false,
             error: "Can't find created user",
         });
     }
-    const user = retrieveUserRequest.Items[0] as User;
+    const user = getUserByEmailQuery.Items[0] as User;
     const jwtPayload: UserJwtPayload = {
         email: user.email.S,
         userId: user.userId.S,

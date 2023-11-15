@@ -1,7 +1,11 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { extractBearerToken } from "../lib/extract-bearer-token";
 import { authorizeJwtToken } from "../lib/authorize-jwt-token";
-import { DynamoDBClient, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+    DynamoDBClient,
+    UpdateItemCommand,
+    UpdateItemCommandOutput,
+} from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { createJsonResponse } from "../lib/create-json-response";
 import { DeactivateLinkRO } from "../../types/ros/deactivate-link.ro";
@@ -29,25 +33,27 @@ export async function handler(
     const dynamodb = new DynamoDBClient({
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
     });
-
-    const result = await dynamodb.send(
-        new UpdateItemCommand({
-            TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
-            Key: {
-                linkId: {
-                    S: linkId,
+    let linkDeactivateUpdate: UpdateItemCommandOutput;
+    try {
+        linkDeactivateUpdate = await dynamodb.send(
+            new UpdateItemCommand({
+                TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
+                Key: {
+                    linkId: {
+                        S: linkId,
+                    },
                 },
-            },
-            UpdateExpression: "SET active = :active",
-            ExpressionAttributeValues: {
-                ":active": { BOOL: false },
-            },
-        })
-    );
-    if (result.$metadata.httpStatusCode !== 200) {
+                UpdateExpression: "SET active = :active",
+                ExpressionAttributeValues: {
+                    ":active": { BOOL: false },
+                },
+            })
+        );
+    } catch (e) {
+        console.log(e);
         return createJsonResponse(500, {
             success: false,
-            error: "Link can't be deactivated",
+            error: "Failed to deactivate a link",
         });
     }
     return createJsonResponse<DeactivateLinkRO>(200, {

@@ -6,6 +6,7 @@ import {
     DynamoDBClient,
     PutItemCommand,
     QueryCommand,
+    QueryCommandOutput,
 } from "@aws-sdk/client-dynamodb";
 import { UserJwtPayload } from "../../types/model/user-jwt.type";
 import { ShortLink } from "../../types/model/short-link.type";
@@ -66,7 +67,7 @@ export async function handler(
         endpoint: process.env.IS_OFFLINE ? "http://localhost:8000" : undefined,
     });
 
-    function createLinkId() {
+    function createLinkId(): string {
         const MAX_BYTES_PER_LINK_ID = 4;
         const bytes: number[] = [];
         let number = Math.ceil(
@@ -80,19 +81,28 @@ export async function handler(
         return buffer.toString("base64url");
     }
 
-    let linkId;
+    let linkId: string;
     while (true) {
         linkId = createLinkId();
-        const result = await dynamodb.send(
-            new QueryCommand({
-                TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
-                KeyConditionExpression: "linkId = :linkId",
-                ExpressionAttributeValues: {
-                    ":linkId": { S: linkId },
-                },
-            })
-        );
-        if (result.Items?.length == 0) {
+        let linkIdExistsQuery: QueryCommandOutput;
+        try {
+            linkIdExistsQuery = await dynamodb.send(
+                new QueryCommand({
+                    TableName: process.env.DYNAMODB_SHORTLINK_TABLE,
+                    KeyConditionExpression: "linkId = :linkId",
+                    ExpressionAttributeValues: {
+                        ":linkId": { S: linkId },
+                    },
+                })
+            );
+        } catch (e) {
+            console.log(e);
+            return createJsonResponse(500, {
+                success: false,
+                error: "Failed to deactivate a link",
+            });
+        }
+        if (linkIdExistsQuery.Items?.length == 0) {
             break;
         }
     }
@@ -116,12 +126,20 @@ export async function handler(
             BOOL: true,
         },
     };
-    await dynamodb.send(
-        new PutItemCommand({
-            TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
-            Item: shortLinkItem,
-        })
-    );
+    try {
+        await dynamodb.send(
+            new PutItemCommand({
+                TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
+                Item: shortLinkItem,
+            })
+        );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Failed to save link to database",
+        });
+    }
     const host = event.headers["Host"] || event.headers["host"];
     const proto =
         event.headers["X-Forwarded-Proto"] ||

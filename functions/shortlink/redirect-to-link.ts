@@ -2,6 +2,7 @@ import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import {
     DynamoDBClient,
     GetItemCommand,
+    GetItemCommandOutput,
     PutItemCommand,
     UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
@@ -23,18 +24,27 @@ export async function handler(
             error: "Link with this id not found",
         });
     }
-    const result = await dynamodb.send(
-        new GetItemCommand({
-            TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
-            Key: {
-                linkId: {
-                    S: linkId,
+    let getLinkQuery: GetItemCommandOutput;
+    try {
+        getLinkQuery = await dynamodb.send(
+            new GetItemCommand({
+                TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
+                Key: {
+                    linkId: {
+                        S: linkId,
+                    },
                 },
-            },
-            AttributesToGet: ["link", "linkId", "active", "oneTime"],
-        })
-    );
-    const shortLink = result.Item as ShortLink;
+                AttributesToGet: ["link", "linkId", "active", "oneTime"],
+            })
+        );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Error happened while the link from database",
+        });
+    }
+    const shortLink = getLinkQuery.Item as ShortLink;
     if (!shortLink) {
         return createJsonResponse(404, {
             success: false,
@@ -59,27 +69,43 @@ export async function handler(
             N: Date.now().toString(),
         },
     };
-    await dynamodb.send(
-        new PutItemCommand({
-            TableName: process.env.DYNAMODB_VIEW_TABLE!,
-            Item: viewItem,
-        })
-    );
-    if (shortLink.oneTime.BOOL == true) {
+    try {
         await dynamodb.send(
-            new UpdateItemCommand({
-                TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
-                Key: {
-                    linkId: {
-                        S: linkId,
-                    },
-                },
-                UpdateExpression: "SET active = :active",
-                ExpressionAttributeValues: {
-                    ":active": { BOOL: false },
-                },
+            new PutItemCommand({
+                TableName: process.env.DYNAMODB_VIEW_TABLE!,
+                Item: viewItem,
             })
         );
+    } catch (e) {
+        console.log(e);
+        return createJsonResponse(500, {
+            success: false,
+            error: "Error happened while saving view to database",
+        });
+    }
+    if (shortLink.oneTime.BOOL == true) {
+        try {
+            await dynamodb.send(
+                new UpdateItemCommand({
+                    TableName: process.env.DYNAMODB_SHORTLINK_TABLE!,
+                    Key: {
+                        linkId: {
+                            S: linkId,
+                        },
+                    },
+                    UpdateExpression: "SET active = :active",
+                    ExpressionAttributeValues: {
+                        ":active": { BOOL: false },
+                    },
+                })
+            );
+        } catch (e) {
+            console.log(e);
+            return createJsonResponse(500, {
+                success: false,
+                error: "Error happened while updating link",
+            });
+        }
     }
     return {
         statusCode: 301,

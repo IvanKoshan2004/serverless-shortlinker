@@ -9,13 +9,20 @@ export async function authorizeJwtToken<T>(
             ? process.env.OFFLINE_LAMBDA_ENDPOINT
             : undefined,
     });
-    const result = await lambda.send(
-        new InvokeCommand({
-            FunctionName: process.env.VERIFY_JWT_FUNCTION,
-            InvocationType: "RequestResponse",
-            Payload: JSON.stringify({ accessToken: accessToken }),
-        })
-    );
-    const responseBody = JSON.parse(Buffer.from(result.Payload!).toString());
-    return responseBody;
+    try {
+        const verifyJwtInvoke = await lambda.send(
+            new InvokeCommand({
+                FunctionName: process.env.VERIFY_JWT_FUNCTION,
+                InvocationType: "RequestResponse",
+                Payload: JSON.stringify({ accessToken: accessToken }),
+            })
+        );
+        const responseBody = JSON.parse(
+            Buffer.from(verifyJwtInvoke.Payload!).toString()
+        );
+        return responseBody;
+    } catch (e) {
+        console.log(e);
+        return { success: false, error: "Failed to authorize jwt token" };
+    }
 }

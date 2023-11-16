@@ -7,6 +7,8 @@ The application provides ability to create and login into users, with further au
 Short links have multiple expiration options, and a one-time use expiration option as well. Once link gets expired, user gets a notification email about the event.
 The application is based on serverless technologies provided by AWS.
 
+API documentation can be viewed [here](https://app.swaggerhub.com/apis-docs/IVANKOSHANM/ShortlinkSLS/1.0.0)
+
 ## Project structure
 
 `functions` folder contains folders `auth`, `email` and `shortlink` that contain lambda functions with corresponding use cases, and `lib` folder containing helper functions.

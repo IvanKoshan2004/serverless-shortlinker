@@ -1,0 +1,385 @@
+openapi: 3.0.0
+
+info:
+    version: "1.0.0"
+    title: shortlinker-sls
+    description: The API for the Shortlinker project
+
+paths:
+    "/auth/signup":
+        post:
+            tags:
+                - Auth
+            description: Register a user
+            operationId: signup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SignUpDto"
+            responses:
+                "201":
+                    description: Successful sign-up
+                    content:
+                        application/json:
+                            schema:
+                                allOf:
+                                    - $ref: "#/components/schemas/SuccessRO"
+                                    - properties:
+                                          data:
+                                              $ref: "#/components/schemas/SignUpROData"
+                "400":
+                    description: Bad Request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+    "/auth/signin":
+        post:
+            tags:
+                - Auth
+            description: Sign in a user.
+            operationId: signin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SignInDto"
+            responses:
+                "200":
+                    description: Successful sign-in
+                    content:
+                        application/json:
+                            schema:
+                                allOf:
+                                    - $ref: "#/components/schemas/SuccessRO"
+                                    - properties:
+                                          data:
+                                              $ref: "#/components/schemas/SignInROData"
+                "400":
+                    description: Bad Request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+    "/{linkId}":
+        get:
+            tags:
+                - Redirect
+            description: "Redirect to the original link. If the short link is not active, will return an error"
+            operationId: redirectToLink
+            parameters:
+                - name: linkId
+                  in: path
+                  description: The ID of the short link to redirect to
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                "301":
+                    description: Redirect to the original link
+                    headers:
+                        Location:
+                            schema:
+                                type: string
+                "400":
+                    description: Bad Request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "404":
+                    description: Not Found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+    "/links":
+        get:
+            tags:
+                - Links
+            description: "Get user's short links with view counts. Request must have Authentication header"
+            operationId: getUserLinks
+            security:
+                - BearerAuth: []
+            responses:
+                "200":
+                    description: User links retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                allOf:
+                                    - $ref: "#/components/schemas/SuccessRO"
+                                    - properties:
+                                          data:
+                                              $ref: "#/components/schemas/GetLinksROData"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+    "/link":
+        post:
+            tags:
+                - Links
+            description: "Create a short link. Request must have Authentication header"
+            operationId: createLink
+            security:
+                - BearerAuth: []
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CreateLinkDto"
+            responses:
+                "201":
+                    description: Short link created successfully
+                    content:
+                        application/json:
+                            schema:
+                                allOf:
+                                    - $ref: "#/components/schemas/SuccessRO"
+                                    - properties:
+                                          data:
+                                              $ref: "#/components/schemas/CreateLinkROData"
+                "400":
+                    description: Bad Request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+    "/link/{linkId}/deactivate":
+        put:
+            tags:
+                - Links
+            description: "Deactivate a short link. Request must have Authentication header"
+            operationId: deactivateLink
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: path
+                  name: linkId
+                  required: true
+                  schema:
+                      type: string
+                  description: LinkId of link that should be deactivated.
+            responses:
+                "200":
+                    description: Short link deactivated successfully
+                    content:
+                        application/json:
+                            schema:
+                                allOf:
+                                    - $ref: "#/components/schemas/SuccessRO"
+                                    - properties:
+                                          data:
+                                              $ref: "#/components/schemas/DeactivateLinkROData"
+                "400":
+                    description: Bad Request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "404":
+                    description: Not Found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+                "500":
+                    description: Internal Server Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FailRO"
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+    schemas:
+        SignUpDto:
+            type: object
+            required:
+                - email
+                - password
+            properties:
+                email:
+                    type: string
+                    format: email
+                    example: "hello@gmail.com"
+                    description: "User email"
+                password:
+                    type: string
+                    example: "password"
+                    description: "User password"
+        SignInDto:
+            type: object
+            required:
+                - email
+                - password
+            properties:
+                email:
+                    type: string
+                    format: email
+                    example: "hello@gmail.com"
+                    description: "User email"
+                password:
+                    type: string
+                    example: "password"
+                    description: "User password"
+        SignUpROData:
+            type: object
+            properties:
+                accessToken:
+                    type: string
+                    format: jwtToken
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhlbGxvQGdtYWlsLmNvbSIsInVzZXJJZCI6Ijg3NDMyOGI4LWEwNWItNDgyNy1iYzIzLTkyZTUxMTEzNDI3NCIsImlhdCI6MTcwMDA3MDg4NiwiZXhwIjoxNzAwMDc4MDg2fQ.B0I0arq8TMelRf8C6FKTB7JCSk2eWvulUpY2fVeAkbc"
+                    description: "User jwt access token, used to get access to operations with links"
+        SignInROData:
+            type: object
+            properties:
+                accessToken:
+                    type: string
+                    format: jwtToken
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhlbGxvQGdtYWlsLmNvbSIsInVzZXJJZCI6Ijg3NDMyOGI4LWEwNWItNDgyNy1iYzIzLTkyZTUxMTEzNDI3NCIsImlhdCI6MTcwMDA3MDg4NiwiZXhwIjoxNzAwMDc4MDg2fQ.B0I0arq8TMelRf8C6FKTB7JCSk2eWvulUpY2fVeAkbc"
+                    description: "User jwt access token, used to get access to operations with links"
+
+        CreateLinkDto:
+            type: object
+            required:
+                - expiration
+                - link
+            properties:
+                expiration:
+                    type: string
+                    enum:
+                        - 1d
+                        - 3d
+                        - 7d
+                        - one-time
+                    description: "Specifies expiration timeout after which the link is going to be deactivated. one-time links get deactivated after a single redirect"
+                link:
+                    type: string
+                    format: uri
+                    description: "Link that needs to be shortened"
+            example:
+                expiration: "one-time"
+                link: "https://example.com"
+
+        CreateLinkROData:
+            type: object
+            properties:
+                linkId:
+                    type: string
+                    example: "aGi2la"
+                    description: "LinkId of generated short link"
+                link:
+                    type: string
+                    example: "https://application.com/aGi2la"
+                    description: "A redirect link"
+        DeactivateLinkROData:
+            type: object
+        GetLinksROData:
+            type: object
+            properties:
+                links:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            linkId:
+                                type: string
+                                example: "aGi2la"
+                                description: "LinkId of short link"
+                            link:
+                                type: string
+                                example: "https://example"
+                                description: "Original link that was shortened"
+                            active:
+                                type: boolean
+                                example: true
+                                description: "Is the link active"
+                            viewCount:
+                                type: integer
+                                example: 5
+                                description: "Number of times a redirect was used"
+        SuccessRO:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    example: true
+                data:
+                    type: object
+            required:
+                - success
+                - data
+
+        FailRO:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    example: false
+                error:
+                    type: string
+            required:
+                - success
+                - error

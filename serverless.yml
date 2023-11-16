@@ -133,7 +133,7 @@ functions:
                 - "node_modules/aws-lambda"
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
-            - httpApi: "ANY /{linkId}"
+            - httpApi: "GET /{linkId}"
     deactivate-link:
         handler: functions/shortlink/deactivate-link.handler
         name: ${self:service}-${sls:stage}-deactivate-link
@@ -142,7 +142,7 @@ functions:
                 - "node_modules/aws-lambda"
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
-            - httpApi: "DELETE /link/{linkId}"
+            - httpApi: "PUT /link/{linkId}/deactivate"
     get-links:
         handler: functions/shortlink/get-links.handler
         name: ${self:service}-${sls:stage}-get-links
@@ -151,7 +151,7 @@ functions:
                 - "node_modules/aws-lambda"
                 - "node_modules/@aws-sdk/client-dynamodb"
         events:
-            - httpApi: "GET /link"
+            - httpApi: "GET /links"
     deactivate-links-cron:
         handler: functions/shortlink/deactivate-links-cron.handler
         name: ${self:service}-${sls:stage}-deactivate-links-cron
